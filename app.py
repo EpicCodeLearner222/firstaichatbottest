@@ -1,5 +1,8 @@
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
 
 # Define vocabulary
 vocabulary = ["Hello", "there", "How", "are", "you", "doing", "today", "I", "am", "feeling", "great"]
@@ -40,9 +43,20 @@ y_train = [
 knn = KNeighborsClassifier(n_neighbors=1)
 knn.fit(X_train, y_train)
 
-# Test input and prediction
-input_text = "Hello How are you"
-input_vector = text_to_vector(input_text, vocabulary)
+# Flask route to make predictions
+@app.route('/predict', methods=['POST'])
+def predict():
+    data = request.get_json()  # Get input data from the request
+    input_text = data['text']
+    
+    # Convert the input text to vector
+    input_vector = text_to_vector(input_text, vocabulary)
+    
+    # Make prediction using KNN
+    predicted_response = knn.predict([input_vector])
+    
+    # Return the predicted response as a JSON response
+    return jsonify({'response': predicted_response[0]})
 
-predicted_response = knn.predict([input_vector])
-print("Predicted Response for '{}' : {}".format(input_text, predicted_response[0]))
+if __name__ == '__main__':
+    app.run(debug=True)
